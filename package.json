@@ -1,0 +1,17 @@
+{
+  "name": "cross-border-dapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cross-border remittance dapp with Ganache/Hardhat deployment",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:ganache": "hardhat run scripts/deploy.js --network ganache",
+    "sync:abi": "node scripts/export-abi.js",
+    "generate:frontend-config": "node scripts/generate-frontend-config.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.24.1"
+  }
+}
