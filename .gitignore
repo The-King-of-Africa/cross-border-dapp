@@ -1,0 +1,45 @@
+# -------- OS / Editor --------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# -------- Secrets --------
+.env
+.env.*
+!.env.example
+secrets.json
+mnemonic.txt
+
+# -------- Solidity tooling (in case you add Truffle/Hardhat/Foundry later) --------
+node_modules/
+build/
+artifacts/
+cache/
+out/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+
+# Truffle
+.openzeppelin/
+
+# Hardhat
+hardhat.config.ts.bak
+
+# -------- Compiled contract output --------
+contracts/build/
+*.bin
+
+# -------- Logs --------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -------- Misc --------
+.netlify/
+.vercel/
