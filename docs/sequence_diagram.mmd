@@ -1,0 +1,72 @@
+%% Cross-Border Payments DApp — Sequence Diagram
+%% Paste this into https://mermaid.live or Lucidchart (UML Sequence)
+%% to re-render or export as PNG/SVG/PDF.
+
+sequenceDiagram
+    autonumber
+    actor Sender as Sender (Zambia)
+    participant UI as Frontend DApp<br/>(index.html + ethers.js)
+    participant MM as MetaMask<br/>(Signer)
+    participant SC as CrossBorderPayments<br/>Smart Contract
+    participant BC as Ganache<br/>Blockchain
+    actor Recipient as Recipient (Tanzania)
+
+    %% ------------------------------------------------------------------
+    Note over Sender,Recipient: Phase 1 — Onboarding
+    Sender->>UI: Open DApp, click "Connect Wallet"
+    UI->>MM: eth_requestAccounts
+    MM-->>UI: account, chainId
+    UI-->>Sender: Wallet connected
+
+    Sender->>UI: Submit Register form<br/>(name, country=ZM, currency=ZMW)
+    UI->>MM: Sign registerUser(...)
+    MM->>BC: Broadcast signed tx
+    BC->>SC: execute registerUser
+    SC-->>BC: emit UserRegistered
+    BC-->>UI: Transaction receipt
+    UI-->>Sender: "You are registered"
+
+    Note over Recipient,UI: Recipient performs same registration<br/>from their own browser/wallet.
+
+    %% ------------------------------------------------------------------
+    Note over Sender,Recipient: Phase 2 — Fund the Sender Wallet (optional)
+    Sender->>UI: Click "Deposit 1 ETH"
+    UI->>MM: Sign deposit() with msg.value = 1 ETH
+    MM->>BC: Broadcast
+    BC->>SC: execute deposit()
+    SC->>SC: balances[sender] += 1 ETH
+    SC-->>BC: emit Deposited
+    BC-->>UI: Receipt
+    UI-->>Sender: Updated in-contract balance
+
+    %% ------------------------------------------------------------------
+    Note over Sender,Recipient: Phase 3 — Cross-Border Payment
+    Sender->>UI: Enter recipient, amount,<br/>exchange rate (ZMW per ETH), memo
+    UI->>UI: Validate inputs,<br/>compute wei + rate*1e6
+    UI->>MM: Sign sendPayment(recipient, grossAmt,<br/>rate, note) [+ msg.value]
+    MM->>BC: Broadcast signed tx
+    BC->>SC: execute sendPayment(...)
+
+    SC->>SC: Verify both users registered
+    SC->>SC: fee = gross × feeBp / 10 000
+    SC->>SC: net = gross − fee
+    SC->>SC: balances[recipient] += net<br/>balances[owner] += fee
+    SC->>SC: Push Transaction record
+    SC-->>BC: emit PaymentSent
+    SC-->>BC: emit PaymentReceived
+
+    BC-->>UI: Receipt + event logs
+    UI-->>Sender: "Payment confirmed ✓"<br/>Show tx hash + TZS value
+    UI-->>Recipient: Event listener refreshes<br/>recipient's history + balance
+
+    %% ------------------------------------------------------------------
+    Note over Sender,Recipient: Phase 4 — Recipient Withdraws Locally
+    Recipient->>UI: Click "Withdraw 0.5 ETH"
+    UI->>MM: Sign withdraw(0.5 ETH)
+    MM->>BC: Broadcast
+    BC->>SC: execute withdraw()
+    SC->>SC: balances[recipient] -= 0.5 ETH
+    SC-->>Recipient: Transfer 0.5 ETH (off-ramp)
+    SC-->>BC: emit Withdrawn
+    BC-->>UI: Receipt
+    UI-->>Recipient: Updated balance<br/>(Recipient cashes out to local FX on-ramp)

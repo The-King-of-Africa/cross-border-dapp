@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 2000" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748B"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="2" result="offsetblur"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.25"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      .title       { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; fill: #0F172A; }
+      .subtitle    { font-size: 13px; fill: #64748B; letter-spacing: 2px; text-transform: uppercase; }
+      .actor-name  { font-size: 14px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; }
+      .actor-sub   { font-size: 11px; fill: #E2E8F0; text-anchor: middle; }
+      .phase       { font-size: 13px; font-weight: 700; fill: #78350F; letter-spacing: 1.5px; text-transform: uppercase; }
+      .msg         { font-size: 12.5px; fill: #0F172A; }
+      .msg-return  { font-size: 12px; fill: #475569; font-style: italic; }
+      .note-text   { font-size: 12px; fill: #78350F; }
+      .self-text   { font-size: 11.5px; fill: #0F766E; font-family: 'Courier New', monospace; }
+      .seq-num     { font-size: 11px; font-weight: 700; fill: #FFFFFF; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1700" height="2000" fill="#FAFAF9"/>
+
+  <!-- Header -->
+  <text x="50" y="48" class="subtitle">UML Sequence Diagram · FIN 510</text>
+  <text x="50" y="82" class="title">Cross-Border Payments DApp — End-to-End Transaction Flow</text>
+  <line x1="50" y1="100" x2="1650" y2="100" stroke="#0F766E" stroke-width="3"/>
+  <line x1="50" y1="106" x2="240" y2="106" stroke="#F59E0B" stroke-width="3"/>
+
+  <!-- Lifeline X-coordinates -->
+  <!-- Sender=160, UI=410, MM=660, SC=910, BC=1160, Recipient=1460 -->
+
+  <!-- Actor boxes (pill shaped) -->
+  <g filter="url(#shadow)">
+    <rect x="80"   y="130" width="160" height="60" rx="30" fill="#0F766E"/>
+    <rect x="330"  y="130" width="160" height="60" rx="10" fill="#115E59"/>
+    <rect x="580"  y="130" width="160" height="60" rx="10" fill="#115E59"/>
+    <rect x="830"  y="130" width="160" height="60" rx="10" fill="#115E59"/>
+    <rect x="1080" y="130" width="160" height="60" rx="10" fill="#115E59"/>
+    <rect x="1380" y="130" width="160" height="60" rx="30" fill="#0F766E"/>
+  </g>
+
+  <text x="160"  y="158" class="actor-name">SENDER</text>
+  <text x="160"  y="176" class="actor-sub">Zambia · ZMW</text>
+  <text x="410"  y="158" class="actor-name">FRONTEND DAPP</text>
+  <text x="410"  y="176" class="actor-sub">index.html + ethers.js</text>
+  <text x="660"  y="158" class="actor-name">METAMASK</text>
+  <text x="660"  y="176" class="actor-sub">Signer / Wallet</text>
+  <text x="910"  y="158" class="actor-name">SMART CONTRACT</text>
+  <text x="910"  y="176" class="actor-sub">CrossBorderPayments</text>
+  <text x="1160" y="158" class="actor-name">GANACHE</text>
+  <text x="1160" y="176" class="actor-sub">Local EVM Node</text>
+  <text x="1460" y="158" class="actor-name">RECIPIENT</text>
+  <text x="1460" y="176" class="actor-sub">Tanzania · TZS</text>
+
+  <!-- Lifelines -->
+  <g stroke="#CBD5E1" stroke-width="1.5" stroke-dasharray="4 4">
+    <line x1="160"  y1="190" x2="160"  y2="1920"/>
+    <line x1="410"  y1="190" x2="410"  y2="1920"/>
+    <line x1="660"  y1="190" x2="660"  y2="1920"/>
+    <line x1="910"  y1="190" x2="910"  y2="1920"/>
+    <line x1="1160" y1="190" x2="1160" y2="1920"/>
+    <line x1="1460" y1="190" x2="1460" y2="1920"/>
+  </g>
+
+  <!-- ============================================================
+       PHASE 1 — Onboarding
+       ============================================================ -->
+  <rect x="50" y="210" width="1600" height="26" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+  <text x="66" y="228" class="phase">Phase 1 — Onboarding &amp; KYC</text>
+
+  <!-- Step 1: connect wallet -->
+  <g>
+    <line x1="160" y1="265" x2="400" y2="265" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="168" cy="265" r="10" fill="#0F766E"/>
+    <text x="168" y="269" class="seq-num">1</text>
+    <text x="180" y="258" class="msg">Click “Connect Wallet”</text>
+  </g>
+
+  <!-- Step 2: eth_requestAccounts -->
+  <g>
+    <line x1="410" y1="295" x2="650" y2="295" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="418" cy="295" r="10" fill="#0F766E"/>
+    <text x="418" y="299" class="seq-num">2</text>
+    <text x="430" y="288" class="msg">eth_requestAccounts()</text>
+  </g>
+
+  <!-- Step 3: return account -->
+  <g>
+    <line x1="660" y1="325" x2="420" y2="325" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="440" y="318" class="msg-return">account, chainId</text>
+  </g>
+
+  <!-- Step 4: register form submit -->
+  <g>
+    <line x1="160" y1="360" x2="400" y2="360" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="168" cy="360" r="10" fill="#0F766E"/>
+    <text x="168" y="364" class="seq-num">3</text>
+    <text x="180" y="353" class="msg">Submit Register form (name, country=ZM, currency=ZMW)</text>
+  </g>
+
+  <!-- Step 5: sign registerUser -->
+  <g>
+    <line x1="410" y1="390" x2="650" y2="390" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="418" cy="390" r="10" fill="#0F766E"/>
+    <text x="418" y="394" class="seq-num">4</text>
+    <text x="430" y="383" class="msg self-text">registerUser(name, country, currency)</text>
+  </g>
+
+  <!-- Step 6: broadcast to blockchain -->
+  <g>
+    <line x1="660" y1="420" x2="1150" y2="420" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="668" cy="420" r="10" fill="#0F766E"/>
+    <text x="668" y="424" class="seq-num">5</text>
+    <text x="680" y="413" class="msg">Broadcast signed transaction</text>
+  </g>
+
+  <!-- Step 7: ganache -> smart contract -->
+  <g>
+    <line x1="1160" y1="450" x2="920" y2="450" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="1152" cy="450" r="10" fill="#0F766E"/>
+    <text x="1152" y="454" class="seq-num">6</text>
+    <text x="940" y="443" class="msg">Execute transaction in EVM</text>
+  </g>
+
+  <!-- Step 8: emit UserRegistered -->
+  <g>
+    <line x1="910" y1="480" x2="1150" y2="480" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="930" y="473" class="msg-return">emit UserRegistered(user, country, currency)</text>
+  </g>
+
+  <!-- Step 9: receipt back to UI -->
+  <g>
+    <line x1="1160" y1="510" x2="420" y2="510" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="440" y="503" class="msg-return">Transaction receipt + event logs</text>
+  </g>
+
+  <!-- Step 10: UI confirms -->
+  <g>
+    <line x1="410" y1="540" x2="170" y2="540" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="185" y="533" class="msg-return">“You are registered ✓”</text>
+  </g>
+
+  <!-- Note: Recipient performs same flow -->
+  <g>
+    <rect x="1280" y="555" width="360" height="46" rx="4" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.2"/>
+    <text x="1300" y="576" class="note-text">Recipient performs the same</text>
+    <text x="1300" y="592" class="note-text">onboarding flow from their own wallet.</text>
+  </g>
+
+  <!-- ============================================================
+       PHASE 2 — Fund Wallet
+       ============================================================ -->
+  <rect x="50" y="625" width="1600" height="26" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+  <text x="66" y="643" class="phase">Phase 2 — Fund the Sender’s In-Contract Wallet (optional)</text>
+
+  <g>
+    <line x1="160" y1="680" x2="400" y2="680" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="168" cy="680" r="10" fill="#0F766E"/>
+    <text x="168" y="684" class="seq-num">7</text>
+    <text x="180" y="673" class="msg">Click “Deposit 1 ETH”</text>
+  </g>
+
+  <g>
+    <line x1="410" y1="710" x2="650" y2="710" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="418" cy="710" r="10" fill="#0F766E"/>
+    <text x="418" y="714" class="seq-num">8</text>
+    <text x="430" y="703" class="msg self-text">deposit() {value: 1 ETH}</text>
+  </g>
+
+  <g>
+    <line x1="660" y1="740" x2="1150" y2="740" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="668" cy="740" r="10" fill="#0F766E"/>
+    <text x="668" y="744" class="seq-num">9</text>
+    <text x="680" y="733" class="msg">Broadcast &amp; mine block</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="770" x2="920" y2="770" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="1152" cy="770" r="10" fill="#0F766E"/>
+    <text x="1152" y="774" class="seq-num">10</text>
+    <text x="940" y="763" class="msg">Execute deposit()</text>
+  </g>
+
+  <!-- Self-call on smart contract: balances[sender] += msg.value -->
+  <g>
+    <path d="M 910 795 Q 990 795 990 815 Q 990 835 912 835" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="819" class="self-text">balances[sender] += 1 ETH</text>
+  </g>
+
+  <g>
+    <line x1="910" y1="860" x2="1150" y2="860" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="930" y="853" class="msg-return">emit Deposited(user, amount, newBalance)</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="890" x2="420" y2="890" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="440" y="883" class="msg-return">Receipt — new in-contract balance</text>
+  </g>
+
+  <!-- ============================================================
+       PHASE 3 — Cross-Border Payment
+       ============================================================ -->
+  <rect x="50" y="920" width="1600" height="26" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+  <text x="66" y="938" class="phase">Phase 3 — Execute Cross-Border Payment (Zambia → Tanzania)</text>
+
+  <g>
+    <line x1="160" y1="975" x2="400" y2="975" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="168" cy="975" r="10" fill="#0F766E"/>
+    <text x="168" y="979" class="seq-num">11</text>
+    <text x="180" y="968" class="msg">Enter recipient, amount, FX rate, memo</text>
+  </g>
+
+  <!-- Self-call on Frontend: validate + scale -->
+  <g>
+    <path d="M 410 1000 Q 510 1000 510 1020 Q 510 1040 412 1040" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="520" y="1024" class="self-text">Validate inputs · compute wei · rate × 1e6</text>
+  </g>
+
+  <g>
+    <line x1="410" y1="1070" x2="650" y2="1070" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="418" cy="1070" r="10" fill="#0F766E"/>
+    <text x="418" y="1074" class="seq-num">12</text>
+    <text x="430" y="1063" class="msg self-text">sendPayment(recipient, gross, rate, note)</text>
+  </g>
+
+  <g>
+    <line x1="660" y1="1100" x2="1150" y2="1100" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="668" cy="1100" r="10" fill="#0F766E"/>
+    <text x="668" y="1104" class="seq-num">13</text>
+    <text x="680" y="1093" class="msg">Broadcast signed transaction</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="1130" x2="920" y2="1130" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="1152" cy="1130" r="10" fill="#0F766E"/>
+    <text x="1152" y="1134" class="seq-num">14</text>
+    <text x="940" y="1123" class="msg">Execute sendPayment in EVM</text>
+  </g>
+
+  <!-- Series of smart contract self-calls -->
+  <g>
+    <path d="M 910 1155 Q 990 1155 990 1175 Q 990 1195 912 1195" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1179" class="self-text">require both users registered</text>
+  </g>
+
+  <g>
+    <path d="M 910 1210 Q 990 1210 990 1230 Q 990 1250 912 1250" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1234" class="self-text">fee = gross × feeBp / 10 000</text>
+  </g>
+
+  <g>
+    <path d="M 910 1265 Q 990 1265 990 1285 Q 990 1305 912 1305" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1289" class="self-text">net = gross − fee</text>
+  </g>
+
+  <g>
+    <path d="M 910 1320 Q 990 1320 990 1340 Q 990 1360 912 1360" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1344" class="self-text">balances[recipient] += net · balances[owner] += fee</text>
+  </g>
+
+  <g>
+    <path d="M 910 1375 Q 990 1375 990 1395 Q 990 1415 912 1415" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1399" class="self-text">transactions.push(Transaction{...})</text>
+  </g>
+
+  <g>
+    <line x1="910" y1="1440" x2="1150" y2="1440" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="930" y="1433" class="msg-return">emit PaymentSent(txId, sender, recipient, net, fee, rate)</text>
+  </g>
+
+  <g>
+    <line x1="910" y1="1470" x2="1150" y2="1470" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="930" y="1463" class="msg-return">emit PaymentReceived(txId, recipient, net, currency)</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="1500" x2="420" y2="1500" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="440" y="1493" class="msg-return">Receipt + event logs</text>
+  </g>
+
+  <g>
+    <line x1="410" y1="1530" x2="170" y2="1530" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="185" y="1523" class="msg-return">“Payment confirmed ✓” · Tx hash · TZS value</text>
+  </g>
+
+  <!-- Event pushed to recipient's UI -->
+  <g>
+    <line x1="1160" y1="1560" x2="1450" y2="1560" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="1180" y="1553" class="msg-return">Recipient UI listener fires on PaymentReceived</text>
+  </g>
+
+  <!-- ============================================================
+       PHASE 4 — Recipient Off-Ramp
+       ============================================================ -->
+  <rect x="50" y="1590" width="1600" height="26" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1"/>
+  <text x="66" y="1608" class="phase">Phase 4 — Recipient Withdraws Locally (Off-Ramp)</text>
+
+  <g>
+    <line x1="1460" y1="1645" x2="420" y2="1645" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="1452" cy="1645" r="10" fill="#0F766E"/>
+    <text x="1452" y="1649" class="seq-num">15</text>
+    <text x="680" y="1638" class="msg">Click “Withdraw 0.5 ETH”</text>
+  </g>
+
+  <g>
+    <line x1="410" y1="1675" x2="650" y2="1675" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="418" cy="1675" r="10" fill="#0F766E"/>
+    <text x="418" y="1679" class="seq-num">16</text>
+    <text x="430" y="1668" class="msg self-text">withdraw(0.5 ETH)</text>
+  </g>
+
+  <g>
+    <line x1="660" y1="1705" x2="1150" y2="1705" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="668" cy="1705" r="10" fill="#0F766E"/>
+    <text x="668" y="1709" class="seq-num">17</text>
+    <text x="680" y="1698" class="msg">Broadcast</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="1735" x2="920" y2="1735" stroke="#334155" stroke-width="1.8" marker-end="url(#arrow)"/>
+    <circle cx="1152" cy="1735" r="10" fill="#0F766E"/>
+    <text x="1152" y="1739" class="seq-num">18</text>
+    <text x="940" y="1728" class="msg">Execute withdraw()</text>
+  </g>
+
+  <g>
+    <path d="M 910 1760 Q 990 1760 990 1780 Q 990 1800 912 1800" fill="none" stroke="#0F766E" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1000" y="1784" class="self-text">balances[recipient] −= 0.5 ETH</text>
+  </g>
+
+  <!-- Actual ETH transfer to recipient EOA -->
+  <g>
+    <line x1="910" y1="1825" x2="1450" y2="1825" stroke="#0F766E" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="1000" y="1818" class="msg" fill="#0F766E" font-weight="600">Transfer 0.5 ETH via low-level call() → Recipient EOA</text>
+  </g>
+
+  <g>
+    <line x1="910" y1="1855" x2="1150" y2="1855" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="930" y="1848" class="msg-return">emit Withdrawn(user, amount, newBalance)</text>
+  </g>
+
+  <g>
+    <line x1="1160" y1="1885" x2="1450" y2="1885" stroke="#64748B" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow-return)"/>
+    <text x="1180" y="1878" class="msg-return">Updated balance → cash out to local FX on-ramp</text>
+  </g>
+
+  <!-- Footer -->
+  <line x1="50" y1="1940" x2="1650" y2="1940" stroke="#0F766E" stroke-width="2"/>
+  <text x="50"   y="1972" font-size="11" fill="#64748B">Martin T. Milanzi · FIN 510 — Blockchain &amp; Cryptocurrencies · Group Assignment</text>
+  <text x="1650" y="1972" font-size="11" fill="#64748B" text-anchor="end">CrossBorderPayments.sol · ethers.js · Ganache · MetaMask</text>
+</svg>

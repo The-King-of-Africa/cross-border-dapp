@@ -1,0 +1,1147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrossBorder Payments · FIN 510</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+
+<style>
+  :root {
+    --bg:        #FAFAF7;
+    --surface:   #FFFFFF;
+    --ink:       #0F172A;
+    --ink-soft:  #334155;
+    --muted:     #64748B;
+    --rule:      #E7E5E0;
+    --rule-soft: #F1EFE9;
+    --teal:      #0F766E;
+    --teal-deep: #115E59;
+    --teal-soft: #CCFBF1;
+    --amber:     #F59E0B;
+    --amber-deep:#B45309;
+    --amber-soft:#FEF3C7;
+    --red:       #B91C1C;
+    --red-soft:  #FEE2E2;
+    --green:     #15803D;
+    --green-soft:#DCFCE7;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body:    'Manrope', system-ui, sans-serif;
+    --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--teal); }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-inner {
+    max-width: 1320px; margin: 0 auto;
+    display: flex; align-items: center; gap: 24px;
+    padding: 18px 32px;
+  }
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 22px; letter-spacing: -0.01em;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  .brand .mark {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    background: linear-gradient(135deg, var(--teal) 0%, var(--amber) 100%);
+    transform: translateY(-1px);
+  }
+  .brand small {
+    font-family: var(--font-body); font-weight: 500; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: var(--rule-soft); border: 1px solid var(--rule);
+    font-size: 12px; color: var(--ink-soft);
+    font-family: var(--font-mono);
+  }
+  .pill .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+  }
+  .pill.online .dot { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+  .pill.warn .dot   { background: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+
+  /* ---------- Layout ---------- */
+  main { max-width: 1320px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  .hero {
+    display: grid; grid-template-columns: 1.3fr 1fr; gap: 48px;
+    align-items: end; padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 36px;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: 54px; line-height: 1.02; letter-spacing: -0.02em;
+    font-weight: 500; margin: 0;
+  }
+  .hero h1 em {
+    font-style: italic; font-weight: 400;
+    color: var(--teal);
+  }
+  .hero p {
+    color: var(--muted); margin: 0; font-size: 14.5px;
+    max-width: 44ch;
+  }
+  .hero .subtitle {
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--amber-deep); margin-bottom: 16px;
+  }
+
+  /* ---------- Setup strip ---------- */
+  .setup {
+    background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: 20px 24px; margin-bottom: 32px;
+    display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center;
+  }
+  .setup label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 600;
+  }
+  .setup input {
+    width: 100%; border: 1px solid var(--rule); border-radius: 6px;
+    padding: 10px 14px; font-family: var(--font-mono); font-size: 13px;
+    background: var(--rule-soft);
+  }
+  .setup input:focus { outline: 2px solid var(--teal); background: var(--surface); }
+
+  /* ---------- Cards ---------- */
+  .grid {
+    display: grid; grid-template-columns: 460px 1fr; gap: 28px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 10px;
+    overflow: hidden; margin-bottom: 24px;
+  }
+  .card-head {
+    padding: 18px 24px 14px; border-bottom: 1px solid var(--rule-soft);
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  .card-head h2 {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: 22px; letter-spacing: -0.01em; margin: 0;
+  }
+  .card-head .kicker {
+    font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--amber-deep); font-weight: 700;
+  }
+  .card-body { padding: 20px 24px 24px; }
+  .card.dim { opacity: 0.55; pointer-events: none; }
+
+  /* ---------- Forms ---------- */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin-bottom: 6px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%; border: 1px solid var(--rule); border-radius: 6px;
+    padding: 10px 12px; font-size: 14px; font-family: var(--font-body);
+    background: var(--surface); color: var(--ink);
+  }
+  .field input.mono { font-family: var(--font-mono); font-size: 13px; }
+  .field textarea { min-height: 60px; resize: vertical; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: 2px solid var(--teal); border-color: var(--teal);
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .help {
+    font-size: 11.5px; color: var(--muted); margin-top: 4px;
+    font-family: var(--font-mono);
+  }
+
+  /* ---------- Buttons ---------- */
+  button {
+    font-family: var(--font-body); font-weight: 600;
+    font-size: 13px; letter-spacing: 0.02em;
+    padding: 11px 18px; border-radius: 6px; border: none;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--ink); color: var(--bg);
+  }
+  .btn-primary:hover { background: var(--teal-deep); }
+  .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .btn-ghost {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-ghost:hover { background: var(--rule-soft); border-color: var(--ink-soft); }
+
+  .btn-accent {
+    background: var(--amber); color: var(--ink);
+  }
+  .btn-accent:hover { background: var(--amber-deep); color: var(--bg); }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+  .btn-row.right { justify-content: flex-end; }
+  .btn-sm { padding: 6px 12px; font-size: 11.5px; }
+
+  /* ---------- Balance panel ---------- */
+  .balance {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule); border-radius: 8px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .balance > div {
+    background: var(--surface); padding: 16px 18px;
+  }
+  .balance .lbl {
+    font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin-bottom: 6px;
+  }
+  .balance .val {
+    font-family: var(--font-mono); font-size: 22px; font-weight: 500;
+    color: var(--ink); letter-spacing: -0.02em;
+  }
+  .balance .val small {
+    font-size: 11px; color: var(--muted); margin-left: 6px;
+    letter-spacing: 0;
+  }
+
+  /* ---------- Preview strip ---------- */
+  .preview {
+    background: var(--amber-soft);
+    border: 1px solid var(--amber); border-left-width: 3px;
+    border-radius: 6px; padding: 12px 14px; margin-top: 14px;
+    font-size: 13px; color: var(--amber-deep);
+    display: none;
+  }
+  .preview.show { display: block; }
+  .preview strong { color: var(--ink); }
+  .preview .row { display: flex; justify-content: space-between; margin: 2px 0; }
+  .preview .row span.val { font-family: var(--font-mono); }
+
+  /* ---------- Transaction table ---------- */
+  .tx-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tx-table th {
+    text-align: left; font-weight: 600; font-size: 10.5px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    padding: 12px 14px; border-bottom: 1px solid var(--rule);
+    background: var(--rule-soft);
+  }
+  .tx-table td {
+    padding: 14px 14px; border-bottom: 1px solid var(--rule-soft);
+    vertical-align: top;
+  }
+  .tx-table tr:last-child td { border-bottom: none; }
+  .tx-table .mono { font-family: var(--font-mono); font-size: 12px; }
+  .tx-table .addr { color: var(--ink-soft); }
+  .tx-table .amt  { font-family: var(--font-mono); font-weight: 500; font-size: 13px; }
+
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 3px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .tag.sent    { background: var(--red-soft);   color: var(--red); }
+  .tag.received{ background: var(--green-soft); color: var(--green); }
+
+  .empty {
+    text-align: center; padding: 64px 24px;
+    color: var(--muted); font-size: 13.5px;
+  }
+  .empty .mark {
+    font-family: var(--font-display); font-size: 32px;
+    color: var(--rule); margin-bottom: 6px;
+  }
+
+  /* ---------- Log ---------- */
+  .log-card { margin-top: 28px; }
+  .log-body {
+    padding: 0; max-height: 220px; overflow-y: auto;
+    font-family: var(--font-mono); font-size: 12px;
+  }
+  .log-row {
+    padding: 8px 24px; border-bottom: 1px solid var(--rule-soft);
+    display: grid; grid-template-columns: 80px 60px 1fr; gap: 12px;
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-row .t     { color: var(--muted); }
+  .log-row .lvl   { font-weight: 700; }
+  .log-row.info    .lvl { color: var(--teal); }
+  .log-row.ok      .lvl { color: var(--green); }
+  .log-row.warn    .lvl { color: var(--amber-deep); }
+  .log-row.error   .lvl { color: var(--red); }
+  .log-row .msg   { color: var(--ink-soft); word-break: break-word; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    max-width: 1320px; margin: 48px auto 0; padding: 24px 32px;
+    border-top: 1px solid var(--rule);
+    display: flex; justify-content: space-between;
+    color: var(--muted); font-size: 11.5px;
+  }
+  footer .mono { font-family: var(--font-mono); }
+
+  /* ---------- Toast ---------- */
+  .toast-wrap {
+    position: fixed; bottom: 24px; right: 24px; z-index: 100;
+    display: flex; flex-direction: column; gap: 8px; max-width: 380px;
+  }
+  .toast {
+    background: var(--ink); color: var(--bg);
+    padding: 12px 16px; border-radius: 6px;
+    font-size: 13px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.2);
+    animation: slideIn 0.25s ease;
+    border-left: 3px solid var(--teal);
+  }
+  .toast.success { border-left-color: var(--green); }
+  .toast.error   { border-left-color: var(--red); }
+  .toast.warn    { border-left-color: var(--amber); }
+  .toast a { color: var(--amber); text-decoration: underline; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Utility ---------- */
+  .hidden { display: none !important; }
+  .muted { color: var(--muted); }
+  .mono { font-family: var(--font-mono); }
+  .small { font-size: 11.5px; }
+
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; gap: 20px; }
+    .hero h1 { font-size: 40px; }
+    .setup { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========================================================== Top bar -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="mark"></span>
+      CrossBorder
+      <small>FIN 510 · DApp Demo</small>
+    </div>
+    <div class="nav-right">
+      <span id="networkPill" class="pill">
+        <span class="dot"></span>
+        <span id="networkLabel">Not connected</span>
+      </span>
+      <span id="walletPill" class="pill hidden">
+        <span class="dot"></span>
+        <span id="walletAddr"></span>
+        <span class="muted"> · </span>
+        <span id="walletEth"></span>
+      </span>
+      <button id="btnConnect" class="btn-primary">Connect Wallet</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ========================================================== Hero -->
+  <div class="hero">
+    <div>
+      <div class="subtitle">Cross-Border Remittance · Blockchain Settlement</div>
+      <h1>Send money <em>across borders</em> on a shared ledger.</h1>
+    </div>
+    <p>
+      A minimal demonstration of the <span class="mono">CrossBorderPayments</span>
+      smart contract. Register your wallet, deposit ETH, and settle
+      remittances to any other registered user — with automatic fee capture,
+      exchange-rate recording, and a full on-chain audit trail.
+    </p>
+  </div>
+
+  <!-- ========================================================== Setup strip -->
+  <div class="setup">
+    <label>Contract Address</label>
+    <input id="contractAddress" placeholder="Paste deployed address from Remix, e.g. 0xA1B2C3…" spellcheck="false">
+    <button id="btnLoadContract" class="btn-ghost">Load</button>
+  </div>
+
+  <!-- ========================================================== Grid -->
+  <div class="grid">
+
+    <!-- ==== LEFT COLUMN ==================================== -->
+    <div>
+
+      <!-- Register card -->
+      <div class="card" id="registerCard">
+        <div class="card-head">
+          <h2>Register</h2>
+          <span class="kicker">Step 1 · KYC</span>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Full Name</label>
+            <input id="regName" placeholder="e.g. Martin Milanzi">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Country</label>
+              <input id="regCountry" placeholder="e.g. Zambia">
+            </div>
+            <div class="field">
+              <label>Local Currency (ISO-4217)</label>
+              <input id="regCurrency" placeholder="ZMW" maxlength="4" style="text-transform: uppercase;">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="btnRegister" class="btn-primary">Register On-Chain</button>
+          </div>
+          <p class="help" id="registerStatus"></p>
+        </div>
+      </div>
+
+      <!-- Funds card -->
+      <div class="card dim" id="fundsCard">
+        <div class="card-head">
+          <h2>Funds</h2>
+          <span class="kicker">Step 2 · Liquidity</span>
+        </div>
+        <div class="card-body">
+          <div class="balance">
+            <div>
+              <div class="lbl">In-Contract Balance</div>
+              <div class="val"><span id="contractBalance">0.0000</span><small>ETH</small></div>
+            </div>
+            <div>
+              <div class="lbl">Wallet Balance</div>
+              <div class="val"><span id="walletBalance">0.0000</span><small>ETH</small></div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Deposit (ETH)</label>
+              <input id="depositAmount" class="mono" type="number" step="0.001" min="0" placeholder="0.500">
+            </div>
+            <div class="field">
+              <label>Withdraw (ETH)</label>
+              <input id="withdrawAmount" class="mono" type="number" step="0.001" min="0" placeholder="0.250">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button id="btnDeposit" class="btn-primary">Deposit</button>
+            <button id="btnWithdraw" class="btn-ghost">Withdraw</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Send card -->
+      <div class="card dim" id="sendCard">
+        <div class="card-head">
+          <h2>Send Payment</h2>
+          <span class="kicker">Step 3 · Remit</span>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Recipient Wallet Address</label>
+            <input id="sendTo" class="mono" placeholder="0x…" spellcheck="false">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Amount (ETH)</label>
+              <input id="sendAmount" class="mono" type="number" step="0.001" min="0" placeholder="1.000">
+            </div>
+            <div class="field">
+              <label>FX Rate (local per 1 ETH)</label>
+              <input id="sendRate" class="mono" type="number" step="0.01" min="0" placeholder="9200000.00">
+            </div>
+          </div>
+          <div class="field">
+            <label>Memo / Reference</label>
+            <textarea id="sendNote" placeholder="e.g. Q1 school fees — Lusaka to Dar es Salaam"></textarea>
+          </div>
+
+          <div class="preview" id="sendPreview">
+            <div class="row"><span>Platform fee</span><span class="val" id="previewFee">—</span></div>
+            <div class="row"><span>Net delivered to recipient</span><span class="val" id="previewNet">—</span></div>
+            <div class="row"><span>Recipient will receive</span><span class="val"><strong id="previewLocal">—</strong></span></div>
+          </div>
+
+          <div class="btn-row" style="margin-top: 16px;">
+            <button id="btnSend" class="btn-accent">Sign &amp; Send</button>
+            <button id="btnClearSend" class="btn-ghost">Clear</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==== RIGHT COLUMN ================================== -->
+    <div>
+
+      <!-- History card -->
+      <div class="card" id="historyCard">
+        <div class="card-head">
+          <h2>Transaction History</h2>
+          <span class="kicker" id="historyCount">0 on-chain records</span>
+        </div>
+        <div class="card-body" style="padding: 0;">
+          <div id="historyBody">
+            <div class="empty">
+              <div class="mark">∅</div>
+              <div>No transactions yet. Connect your wallet, register, and send a payment.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log card -->
+      <div class="card log-card">
+        <div class="card-head">
+          <h2 style="font-size: 16px;">Activity Log</h2>
+          <button id="btnClearLog" class="btn-ghost btn-sm">Clear</button>
+        </div>
+        <div class="card-body log-body" id="logBody">
+          <div class="log-row info">
+            <span class="t">--:--:--</span><span class="lvl">INFO</span>
+            <span class="msg">Waiting for wallet connection…</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div>Martin T. Milanzi &middot; FIN 510 — Blockchain &amp; Cryptocurrencies</div>
+  <div class="mono">CrossBorderPayments.sol · ethers.js v6 · Ganache</div>
+</footer>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ================================================================= -->
+<!-- Application Logic                                                  -->
+<!-- ================================================================= -->
+<script>
+/* -------------------------------------------------------------------
+ * Contract ABI — generated by solc 0.8.20 from CrossBorderPayments.sol
+ * ------------------------------------------------------------------- */
+const CONTRACT_ABI = [
+  {"inputs":[{"internalType":"uint256","name":"_feeBasisPoints","type":"uint256"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Deposited","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"oldFeeBp","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newFeeBp","type":"uint256"}],"name":"FeeUpdated","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"txId","type":"uint256"},{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"string","name":"recipientCurrency","type":"string"}],"name":"PaymentReceived","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"txId","type":"uint256"},{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"fee","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"exchangeRate","type":"uint256"}],"name":"PaymentSent","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"string","name":"country","type":"string"},{"indexed":false,"internalType":"string","name":"currencyCode","type":"string"}],"name":"UserRegistered","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Withdrawn","type":"event"},
+  {"inputs":[],"name":"MAX_FEE_BP","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balances","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"checkBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"deposit","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[],"name":"feeBasisPoints","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_id","type":"uint256"}],"name":"getConvertedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getMyBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getMyTransactionIds","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_id","type":"uint256"}],"name":"getTransaction","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"fee","type":"uint256"},{"internalType":"string","name":"senderCountry","type":"string"},{"internalType":"string","name":"recipientCountry","type":"string"},{"internalType":"string","name":"recipientCurrency","type":"string"},{"internalType":"uint256","name":"exchangeRate","type":"uint256"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"note","type":"string"}],"internalType":"struct CrossBorderPayments.Transaction","name":"","type":"tuple"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"getTransactionCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"string","name":"_name","type":"string"},{"internalType":"string","name":"_country","type":"string"},{"internalType":"string","name":"_currencyCode","type":"string"}],"name":"registerUser","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_recipient","type":"address"},{"internalType":"uint256","name":"_grossAmount","type":"uint256"},{"internalType":"uint256","name":"_exchangeRate","type":"uint256"},{"internalType":"string","name":"_note","type":"string"}],"name":"sendPayment","outputs":[],"stateMutability":"payable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_newFeeBp","type":"uint256"}],"name":"setFeeBasisPoints","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"transactions","outputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"fee","type":"uint256"},{"internalType":"string","name":"senderCountry","type":"string"},{"internalType":"string","name":"recipientCountry","type":"string"},{"internalType":"string","name":"recipientCurrency","type":"string"},{"internalType":"uint256","name":"exchangeRate","type":"uint256"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"string","name":"note","type":"string"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"_newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"users","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"country","type":"string"},{"internalType":"string","name":"currencyCode","type":"string"},{"internalType":"bool","name":"registered","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"stateMutability":"payable","type":"receive"}
+];
+
+/* -------------------------------------------------------------------
+ * Application state
+ * ------------------------------------------------------------------- */
+const state = {
+  provider:   null,
+  signer:     null,
+  account:    null,
+  chainId:    null,
+  contract:   null,          // read-write contract (with signer)
+  contractRO: null,          // read-only contract (with provider)
+  contractAddress: null,
+  feeBp:      0n,
+  userProfile: null,         // { name, country, currencyCode, registered }
+};
+
+/* -------------------------------------------------------------------
+ * DOM helpers
+ * ------------------------------------------------------------------- */
+const $ = (id) => document.getElementById(id);
+
+function shortAddr(a) {
+  if (!a) return '—';
+  return a.slice(0, 6) + '…' + a.slice(-4);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+function nowClock() {
+  const d = new Date();
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function fmtEth(wei, decimals = 4) {
+  if (wei === null || wei === undefined) return '0.0000';
+  try { return Number(ethers.formatEther(wei)).toFixed(decimals); }
+  catch { return '0.0000'; }
+}
+
+function fmtLocal(raw1e6, decimals = 2) {
+  // raw1e6 is BigInt: local-currency × 1e6
+  if (raw1e6 === null || raw1e6 === undefined) return '—';
+  const n = Number(raw1e6) / 1e6;
+  return n.toLocaleString(undefined, {
+    minimumFractionDigits: decimals, maximumFractionDigits: decimals
+  });
+}
+
+function fmtDate(unix) {
+  const d = new Date(Number(unix) * 1000);
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+/* -------------------------------------------------------------------
+ * Logging + toasts
+ * ------------------------------------------------------------------- */
+function log(level, msg) {
+  const row = document.createElement('div');
+  row.className = `log-row ${level}`;
+  row.innerHTML = `
+    <span class="t">${nowClock()}</span>
+    <span class="lvl">${level.toUpperCase()}</span>
+    <span class="msg"></span>
+  `;
+  row.querySelector('.msg').textContent = msg;
+  const body = $('logBody');
+  body.insertBefore(row, body.firstChild);
+  // Keep log size bounded
+  while (body.childElementCount > 200) body.removeChild(body.lastChild);
+}
+
+function toast(kind, msg, linkText, linkHref) {
+  const el = document.createElement('div');
+  el.className = `toast ${kind}`;
+  el.innerHTML = '';
+  el.appendChild(document.createTextNode(msg + ' '));
+  if (linkText && linkHref) {
+    const a = document.createElement('a');
+    a.href = linkHref; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = linkText;
+    el.appendChild(a);
+  }
+  $('toastWrap').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; }, 4500);
+  setTimeout(() => el.remove(), 5000);
+}
+
+function humanError(err) {
+  if (!err) return 'Unknown error';
+  if (err.reason)               return err.reason;
+  if (err.shortMessage)         return err.shortMessage;
+  if (err.info?.error?.message) return err.info.error.message;
+  if (err.data?.message)        return err.data.message;
+  if (err.message)              return err.message;
+  return String(err);
+}
+
+/* -------------------------------------------------------------------
+ * Wallet connection
+ * ------------------------------------------------------------------- */
+async function connectWallet() {
+  if (!window.ethereum) {
+    toast('error', 'MetaMask not detected. Install the browser extension first.');
+    log('error', 'window.ethereum is undefined — MetaMask required.');
+    return;
+  }
+
+  try {
+    state.provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await state.provider.send('eth_requestAccounts', []);
+    state.account  = accounts[0];
+    state.signer   = await state.provider.getSigner();
+    const net      = await state.provider.getNetwork();
+    state.chainId  = Number(net.chainId);
+
+    // UI updates
+    $('walletPill').classList.remove('hidden');
+    $('walletPill').classList.add('online');
+    $('walletAddr').textContent = shortAddr(state.account);
+    $('networkPill').classList.add('online');
+    $('networkLabel').textContent = netName(state.chainId);
+    $('btnConnect').textContent = 'Disconnect';
+
+    log('ok', `Connected: ${state.account} on chain ${state.chainId}`);
+    toast('success', `Connected ${shortAddr(state.account)}`);
+
+    await refreshWalletBalance();
+
+    // Auto-load contract if an address is already in the input or localStorage
+    const savedAddr = localStorage.getItem('xbp.contractAddress');
+    if (savedAddr) {
+      $('contractAddress').value = savedAddr;
+      loadContract();
+    }
+
+    // Wire MetaMask events
+    window.ethereum.on('accountsChanged', (accs) => {
+      if (accs.length === 0) {
+        disconnectWallet();
+      } else {
+        state.account = accs[0];
+        $('walletAddr').textContent = shortAddr(state.account);
+        log('warn', `Account switched to ${state.account}`);
+        location.reload();  // Simplest correct behaviour
+      }
+    });
+    window.ethereum.on('chainChanged', () => {
+      log('warn', 'Network changed — reloading.');
+      location.reload();
+    });
+
+  } catch (err) {
+    log('error', `Connection failed: ${humanError(err)}`);
+    toast('error', humanError(err));
+  }
+}
+
+function disconnectWallet() {
+  state.provider = state.signer = state.account = null;
+  state.contract = state.contractRO = null;
+  $('walletPill').classList.add('hidden');
+  $('networkPill').classList.remove('online');
+  $('networkLabel').textContent = 'Not connected';
+  $('btnConnect').textContent = 'Connect Wallet';
+  $('registerCard').classList.remove('dim');
+  $('fundsCard').classList.add('dim');
+  $('sendCard').classList.add('dim');
+  $('historyBody').innerHTML = emptyHistoryHTML();
+  log('info', 'Wallet disconnected.');
+}
+
+function netName(chainId) {
+  const map = {
+    1337:  'Ganache · localhost',
+    5777:  'Ganache · GUI',
+    31337: 'Hardhat · localhost',
+    1:     'Ethereum Mainnet',
+    11155111: 'Sepolia',
+  };
+  return map[chainId] || `Chain ${chainId}`;
+}
+
+async function refreshWalletBalance() {
+  if (!state.account || !state.provider) return;
+  const bal = await state.provider.getBalance(state.account);
+  $('walletEth').textContent = fmtEth(bal, 4) + ' ETH';
+  $('walletBalance').textContent = fmtEth(bal, 4);
+}
+
+/* -------------------------------------------------------------------
+ * Contract loading
+ * ------------------------------------------------------------------- */
+async function loadContract() {
+  const addr = $('contractAddress').value.trim();
+  if (!state.signer) { toast('warn', 'Connect your wallet first.'); return; }
+  if (!ethers.isAddress(addr)) {
+    toast('error', 'That doesn’t look like a valid address.');
+    return;
+  }
+
+  try {
+    state.contractAddress = addr;
+    state.contract   = new ethers.Contract(addr, CONTRACT_ABI, state.signer);
+    state.contractRO = new ethers.Contract(addr, CONTRACT_ABI, state.provider);
+
+    // Probe the contract
+    const feeBp = await state.contractRO.feeBasisPoints();
+    state.feeBp = feeBp;
+
+    localStorage.setItem('xbp.contractAddress', addr);
+
+    log('ok', `Contract loaded at ${addr} · fee = ${Number(feeBp)/100}%`);
+    toast('success', `Contract loaded. Fee: ${Number(feeBp)/100}%`);
+
+    await refreshUserProfile();
+    await refreshContractBalance();
+    await refreshHistory();
+
+    // Subscribe to events for live updates
+    subscribeToEvents();
+
+  } catch (err) {
+    log('error', `Load failed: ${humanError(err)}`);
+    toast('error', `Couldn’t load contract — ${humanError(err)}`);
+  }
+}
+
+/* -------------------------------------------------------------------
+ * User profile + gated UI
+ * ------------------------------------------------------------------- */
+async function refreshUserProfile() {
+  if (!state.contractRO || !state.account) return;
+  const u = await state.contractRO.users(state.account);
+  state.userProfile = {
+    name:         u.name,
+    country:      u.country,
+    currencyCode: u.currencyCode,
+    registered:   u.registered,
+  };
+
+  if (u.registered) {
+    $('registerCard').classList.add('dim');
+    $('registerStatus').textContent =
+      `Registered as ${u.name} · ${u.country} · ${u.currencyCode}`;
+    $('fundsCard').classList.remove('dim');
+    $('sendCard').classList.remove('dim');
+  } else {
+    $('registerCard').classList.remove('dim');
+    $('registerStatus').textContent = '';
+    $('fundsCard').classList.add('dim');
+    $('sendCard').classList.add('dim');
+  }
+}
+
+async function refreshContractBalance() {
+  if (!state.contractRO || !state.account) return;
+  const bal = await state.contractRO.checkBalance(state.account);
+  $('contractBalance').textContent = fmtEth(bal, 4);
+}
+
+/* -------------------------------------------------------------------
+ * Register
+ * ------------------------------------------------------------------- */
+async function onRegister() {
+  if (!state.contract) { toast('warn', 'Load the contract first.'); return; }
+  const name     = $('regName').value.trim();
+  const country  = $('regCountry').value.trim();
+  const currency = $('regCurrency').value.trim().toUpperCase();
+  if (!name || !country || !currency) {
+    toast('warn', 'All three fields are required.'); return;
+  }
+
+  const btn = $('btnRegister');
+  btn.disabled = true; btn.textContent = 'Signing…';
+  try {
+    log('info', `registerUser("${name}", "${country}", "${currency}")`);
+    const tx = await state.contract.registerUser(name, country, currency);
+    btn.textContent = 'Mining…';
+    log('info', `Tx sent · ${tx.hash}`);
+    const rc = await tx.wait();
+    log('ok', `Registered in block ${rc.blockNumber}`);
+    toast('success', `You're on-chain as ${name} · ${country} · ${currency}`);
+    await refreshUserProfile();
+  } catch (err) {
+    log('error', `Register failed: ${humanError(err)}`);
+    toast('error', humanError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Register On-Chain';
+  }
+}
+
+/* -------------------------------------------------------------------
+ * Deposit / Withdraw
+ * ------------------------------------------------------------------- */
+async function onDeposit() {
+  if (!state.contract) return;
+  const v = parseFloat($('depositAmount').value);
+  if (!(v > 0)) { toast('warn', 'Enter a positive ETH amount.'); return; }
+
+  const btn = $('btnDeposit');
+  btn.disabled = true; btn.textContent = 'Signing…';
+  try {
+    const value = ethers.parseEther(String(v));
+    log('info', `deposit() value=${v} ETH`);
+    const tx = await state.contract.deposit({ value });
+    btn.textContent = 'Mining…';
+    log('info', `Tx sent · ${tx.hash}`);
+    const rc = await tx.wait();
+    log('ok', `Deposit confirmed in block ${rc.blockNumber}`);
+    toast('success', `Deposited ${v} ETH`);
+    $('depositAmount').value = '';
+    await refreshContractBalance();
+    await refreshWalletBalance();
+  } catch (err) {
+    log('error', `Deposit failed: ${humanError(err)}`);
+    toast('error', humanError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Deposit';
+  }
+}
+
+async function onWithdraw() {
+  if (!state.contract) return;
+  const v = parseFloat($('withdrawAmount').value);
+  if (!(v > 0)) { toast('warn', 'Enter a positive ETH amount.'); return; }
+
+  const btn = $('btnWithdraw');
+  btn.disabled = true; btn.textContent = 'Signing…';
+  try {
+    const amount = ethers.parseEther(String(v));
+    log('info', `withdraw(${v} ETH)`);
+    const tx = await state.contract.withdraw(amount);
+    btn.textContent = 'Mining…';
+    log('info', `Tx sent · ${tx.hash}`);
+    const rc = await tx.wait();
+    log('ok', `Withdraw confirmed in block ${rc.blockNumber}`);
+    toast('success', `Withdrew ${v} ETH`);
+    $('withdrawAmount').value = '';
+    await refreshContractBalance();
+    await refreshWalletBalance();
+  } catch (err) {
+    log('error', `Withdraw failed: ${humanError(err)}`);
+    toast('error', humanError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Withdraw';
+  }
+}
+
+/* -------------------------------------------------------------------
+ * Send payment
+ * ------------------------------------------------------------------- */
+function updateSendPreview() {
+  const amt  = parseFloat($('sendAmount').value);
+  const rate = parseFloat($('sendRate').value);
+  if (!(amt > 0) || !(rate > 0) || state.feeBp === null) {
+    $('sendPreview').classList.remove('show'); return;
+  }
+  const feeBp   = Number(state.feeBp);                     // e.g. 50
+  const feeEth  = amt * feeBp / 10000;
+  const netEth  = amt - feeEth;
+  const netLocal = netEth * rate;
+
+  $('previewFee').textContent   = `${feeEth.toFixed(6)} ETH  (${(feeBp/100).toFixed(2)}%)`;
+  $('previewNet').textContent   = `${netEth.toFixed(6)} ETH`;
+  $('previewLocal').textContent = `≈ ${netLocal.toLocaleString(undefined,
+      {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+  $('sendPreview').classList.add('show');
+}
+
+async function onSend() {
+  if (!state.contract) return;
+  const to    = $('sendTo').value.trim();
+  const amt   = parseFloat($('sendAmount').value);
+  const rate  = parseFloat($('sendRate').value);
+  const note  = $('sendNote').value.trim();
+
+  if (!ethers.isAddress(to)) { toast('error', 'Invalid recipient address.'); return; }
+  if (!(amt > 0))            { toast('warn',  'Amount must be > 0.');       return; }
+  if (!(rate > 0))           { toast('warn',  'FX rate must be > 0.');      return; }
+
+  const btn = $('btnSend');
+  btn.disabled = true; btn.textContent = 'Signing…';
+  try {
+    const gross   = ethers.parseEther(String(amt));
+    // Rate stored as rate * 1e6 in the contract
+    const rateX6  = BigInt(Math.round(rate * 1_000_000));
+
+    // Decide whether to attach msg.value or draw from in-contract balance.
+    const myBal = await state.contractRO.checkBalance(state.account);
+    const attachValue = myBal >= gross ? 0n : gross;  // cover full via msg.value if no balance
+
+    log('info', `sendPayment(${to}, ${amt} ETH, rate=${rate}×1e6, "${note}") value=${ethers.formatEther(attachValue)} ETH`);
+    const tx = await state.contract.sendPayment(to, gross, rateX6, note, { value: attachValue });
+    btn.textContent = 'Mining…';
+    log('info', `Tx sent · ${tx.hash}`);
+    const rc = await tx.wait();
+    log('ok', `Payment confirmed in block ${rc.blockNumber}`);
+    toast('success', `Sent ${amt} ETH to ${shortAddr(to)}`);
+
+    clearSendForm();
+    await refreshContractBalance();
+    await refreshWalletBalance();
+    await refreshHistory();
+  } catch (err) {
+    log('error', `Send failed: ${humanError(err)}`);
+    toast('error', humanError(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign & Send';
+  }
+}
+
+function clearSendForm() {
+  $('sendTo').value = '';
+  $('sendAmount').value = '';
+  $('sendRate').value = '';
+  $('sendNote').value = '';
+  $('sendPreview').classList.remove('show');
+}
+
+/* -------------------------------------------------------------------
+ * History
+ * ------------------------------------------------------------------- */
+function emptyHistoryHTML() {
+  return `<div class="empty">
+    <div class="mark">∅</div>
+    <div>No transactions yet. Connect your wallet, register, and send a payment.</div>
+  </div>`;
+}
+
+async function refreshHistory() {
+  if (!state.contractRO || !state.account) return;
+
+  const ids = await state.contractRO.getMyTransactionIds();
+  $('historyCount').textContent =
+    `${ids.length} ${ids.length === 1 ? 'record' : 'records'}`;
+
+  if (ids.length === 0) {
+    $('historyBody').innerHTML = emptyHistoryHTML();
+    return;
+  }
+
+  // Fetch all transaction structs in parallel
+  const txs = await Promise.all(ids.map(id => state.contractRO.getTransaction(id)));
+  // Newest first
+  txs.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+
+  const rows = txs.map(t => {
+    const iAmSender = t.sender.toLowerCase() === state.account.toLowerCase();
+    const counterpart = iAmSender ? t.recipient : t.sender;
+    const direction = iAmSender ? 'sent' : 'received';
+    const ethAmt  = fmtEth(t.amount, 6);
+    const feeEth  = fmtEth(t.fee, 6);
+    const rate    = Number(t.exchangeRate) / 1e6;
+    const localAmt = (Number(t.amount) / 1e18) * rate;
+    return `
+      <tr>
+        <td><span class="mono">#${t.id}</span></td>
+        <td><span class="tag ${direction}">${direction}</span></td>
+        <td>
+          <div class="mono addr" title="${counterpart}">${shortAddr(counterpart)}</div>
+          <div class="small muted">${iAmSender ? t.recipientCountry : t.senderCountry}</div>
+        </td>
+        <td class="amt">${ethAmt}<small class="muted"> ETH</small></td>
+        <td>
+          <div class="amt">${localAmt.toLocaleString(undefined,
+            {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
+          <div class="small muted">${t.recipientCurrency} @ ${rate.toLocaleString()}</div>
+        </td>
+        <td class="amt small muted">${feeEth} ETH</td>
+        <td class="small">${fmtDate(t.timestamp)}</td>
+        <td class="small" style="max-width:240px; word-break: break-word;">${escapeHTML(t.note)}</td>
+      </tr>`;
+  }).join('');
+
+  $('historyBody').innerHTML = `
+    <table class="tx-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Type</th><th>Counterparty</th>
+          <th>ETH</th><th>Local Value</th><th>Fee</th>
+          <th>Time</th><th>Memo</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function escapeHTML(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+/* -------------------------------------------------------------------
+ * Event subscriptions — live updates
+ * ------------------------------------------------------------------- */
+function subscribeToEvents() {
+  if (!state.contract) return;
+
+  // Clean any prior listeners
+  state.contract.removeAllListeners();
+
+  state.contract.on('PaymentSent', async (txId, sender, recipient, amount, fee, rate, ev) => {
+    const me = state.account.toLowerCase();
+    if (sender.toLowerCase() === me || recipient.toLowerCase() === me) {
+      log('ok', `PaymentSent #${txId} · ${shortAddr(sender)} → ${shortAddr(recipient)} · ${fmtEth(amount,6)} ETH`);
+      await refreshContractBalance();
+      await refreshHistory();
+    }
+  });
+
+  state.contract.on('PaymentReceived', async (txId, recipient, amount, currency) => {
+    if (recipient.toLowerCase() === state.account.toLowerCase()) {
+      toast('success', `Incoming: ${fmtEth(amount, 6)} ETH`);
+    }
+  });
+
+  state.contract.on('Deposited', async (user) => {
+    if (user.toLowerCase() === state.account.toLowerCase()) {
+      await refreshContractBalance();
+      await refreshWalletBalance();
+    }
+  });
+
+  state.contract.on('Withdrawn', async (user) => {
+    if (user.toLowerCase() === state.account.toLowerCase()) {
+      await refreshContractBalance();
+      await refreshWalletBalance();
+    }
+  });
+
+  log('info', 'Subscribed to PaymentSent, PaymentReceived, Deposited, Withdrawn.');
+}
+
+/* -------------------------------------------------------------------
+ * Wire up DOM events
+ * ------------------------------------------------------------------- */
+$('btnConnect').addEventListener('click', () => {
+  if (state.account) disconnectWallet(); else connectWallet();
+});
+$('btnLoadContract').addEventListener('click', loadContract);
+$('btnRegister').addEventListener('click', onRegister);
+$('btnDeposit').addEventListener('click', onDeposit);
+$('btnWithdraw').addEventListener('click', onWithdraw);
+$('btnSend').addEventListener('click', onSend);
+$('btnClearSend').addEventListener('click', clearSendForm);
+$('btnClearLog').addEventListener('click', () => { $('logBody').innerHTML = ''; });
+
+$('sendAmount').addEventListener('input', updateSendPreview);
+$('sendRate').addEventListener('input',   updateSendPreview);
+
+// Restore saved contract address on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const savedAddr = localStorage.getItem('xbp.contractAddress');
+  if (savedAddr) $('contractAddress').value = savedAddr;
+  log('info', 'Ready. Connect your wallet to begin.');
+});
+
+</script>
+</body>
+</html>
