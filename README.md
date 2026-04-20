@@ -4,6 +4,28 @@ A cross-border remittance demonstration built on Ethereum-compatible infrastruct
 
 ---
 
+## Environment-driven workflow
+
+Use the new `.env` workflow (FractionalEstate-style) so Ganache and deployment settings are centralized.
+
+```bash
+cp .env.example .env
+npm install
+npm run compile
+npm run deploy:ganache
+npm run sync:abi
+npm run generate:frontend-config
+```
+
+`CrossBorderPayments` now deploys with constructor args pulled from `.env`:
+- `FEE_BASIS_POINTS`
+- `TREASURY_ADDRESS` (falls back to deployer if empty)
+- `MINIMUM_INVESTMENT`
+
+The frontend now reads runtime settings from `frontend/env-config.js` (generated from `.env`).
+
+---
+
 ## Deliverables
 
 | Task | File(s) |
@@ -40,7 +62,7 @@ Install these on every team member's laptop before the demo:
 3. **[VS Code](https://code.visualstudio.com/)** with the **Live Server** extension (by Ritwick Dey) — serves the HTML frontend.
 4. A modern Chrome/Brave/Firefox browser.
 
-No Node.js or Truffle/Hardhat install required for the primary path — we deploy through Remix in the browser.
+Node.js (v18+) is now recommended so you can deploy with Hardhat using `.env` settings. Remix remains optional.
 
 ---
 

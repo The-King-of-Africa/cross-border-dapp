@@ -21,7 +21,9 @@ contract CrossBorderPayments {
     // -------------------------------------------------------------------------
 
     address public owner;
+    address public feeTreasury;
     uint256 public feeBasisPoints;       // 50 = 0.50%, 100 = 1.00%, max 500 (5%)
+    uint256 public minimumInvestmentWei;
     uint256 public constant MAX_FEE_BP = 500;
 
     struct User {
@@ -72,6 +74,8 @@ contract CrossBorderPayments {
         string  recipientCurrency
     );
     event FeeUpdated(uint256 oldFeeBp, uint256 newFeeBp);
+    event TreasuryUpdated(address indexed oldTreasury, address indexed newTreasury);
+    event MinimumInvestmentUpdated(uint256 oldMinimum, uint256 newMinimum);
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -93,11 +97,15 @@ contract CrossBorderPayments {
 
     /**
      * @param _feeBasisPoints initial fee in basis points (50 = 0.50%).
+     * @param _feeTreasury wallet credited with platform fees (falls back to deployer).
+     * @param _minimumInvestmentWei minimum gross amount for sendPayment in wei.
      */
-    constructor(uint256 _feeBasisPoints) {
+    constructor(uint256 _feeBasisPoints, address _feeTreasury, uint256 _minimumInvestmentWei) {
         require(_feeBasisPoints <= MAX_FEE_BP, "Fee exceeds 5% cap");
         owner = msg.sender;
         feeBasisPoints = _feeBasisPoints;
+        feeTreasury = _feeTreasury == address(0) ? msg.sender : _feeTreasury;
+        minimumInvestmentWei = _minimumInvestmentWei;
     }
 
     // -------------------------------------------------------------------------
@@ -181,6 +189,7 @@ contract CrossBorderPayments {
         require(_recipient != msg.sender,        "Cannot send to self");
         require(users[_recipient].registered,    "Recipient not registered");
         require(_grossAmount > 0,                "Amount must be > 0");
+        require(_grossAmount >= minimumInvestmentWei, "Below minimum investment");
         require(_exchangeRate > 0,               "Exchange rate must be > 0");
 
         // Fund the payment: use msg.value first, then top up from balance.
@@ -196,9 +205,9 @@ contract CrossBorderPayments {
         uint256 fee       = (_grossAmount * feeBasisPoints) / 10_000;
         uint256 netAmount = _grossAmount - fee;
 
-        // Credit recipient's in-contract balance, accrue fee to the owner.
+        // Credit recipient's in-contract balance, accrue fee to the treasury.
         balances[_recipient] += netAmount;
-        balances[owner]      += fee;
+        balances[feeTreasury] += fee;
 
         // Persist the transaction record.
         uint256 txId = transactions.length;
@@ -260,20 +269,18 @@ contract CrossBorderPayments {
      * @notice Fetch a single transaction by ID.
      */
     function getTransaction(uint256 _id) external view returns (Transaction memory) {
-        require(_id < transactions.length, "Invalid tx id");
+        require(_id < transactions.length, "Invalid transaction id");
         return transactions[_id];
     }
 
     /**
-     * @notice Compute the recipient-currency value of a recorded transaction,
-     *         using the exchange rate captured at transaction time.
-     * @return value amount in recipient's currency, scaled by 1e6
+     * @notice Convert transaction amount into recipient-local currency units.
+     * @dev Returns local-currency amount * 1e6 to preserve precision.
      */
     function getConvertedAmount(uint256 _id) external view returns (uint256) {
-        require(_id < transactions.length, "Invalid tx id");
-        Transaction memory t = transactions[_id];
-        // amount(wei) * rate(1e6) / 1 ether  => value in local currency * 1e6
-        return (t.amount * t.exchangeRate) / 1 ether;
+        require(_id < transactions.length, "Invalid transaction id");
+        Transaction storage t = transactions[_id];
+        return (t.amount * t.exchangeRate) / 1e18;
     }
 
     // -------------------------------------------------------------------------
@@ -281,7 +288,7 @@ contract CrossBorderPayments {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Update the platform fee in basis points. Capped at 5%.
+     * @notice Update fee in basis points (owner-only), capped at 5%.
      */
     function setFeeBasisPoints(uint256 _newFeeBp) external onlyOwner {
         require(_newFeeBp <= MAX_FEE_BP, "Fee exceeds 5% cap");
@@ -291,18 +298,35 @@ contract CrossBorderPayments {
     }
 
     /**
-     * @notice Transfer ownership of the contract.
+     * @notice Update treasury address for platform fee accrual.
+     */
+    function setFeeTreasury(address _newTreasury) external onlyOwner {
+        require(_newTreasury != address(0), "Invalid treasury");
+        address old = feeTreasury;
+        feeTreasury = _newTreasury;
+        emit TreasuryUpdated(old, _newTreasury);
+    }
+
+    /**
+     * @notice Update minimum sendPayment gross amount.
+     */
+    function setMinimumInvestmentWei(uint256 _newMinimum) external onlyOwner {
+        uint256 old = minimumInvestmentWei;
+        minimumInvestmentWei = _newMinimum;
+        emit MinimumInvestmentUpdated(old, _newMinimum);
+    }
+
+    /**
+     * @notice Transfer contract ownership.
      */
     function transferOwnership(address _newOwner) external onlyOwner {
-        require(_newOwner != address(0), "Invalid owner");
+        require(_newOwner != address(0), "Zero address");
         owner = _newOwner;
     }
 
-    // Accept plain ETH transfers as implicit deposits for registered users.
+    // Accept plain ETH transfers as deposit to sender's in-contract balance.
     receive() external payable {
-        if (users[msg.sender].registered) {
-            balances[msg.sender] += msg.value;
-            emit Deposited(msg.sender, msg.value, balances[msg.sender]);
-        }
+        balances[msg.sender] += msg.value;
+        emit Deposited(msg.sender, msg.value, balances[msg.sender]);
     }
 }
